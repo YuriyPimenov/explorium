@@ -9,8 +9,11 @@ except (SystemError, ImportError):
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIR = 'images'
 
-# FILE_NAME = '123.jpg'
-FILE_NAME = 'plan.jpg'
+
+# FILE_NAME = 'plan.jpg'
+FILE_NAME = 'plan2.png'
+# FILE_NAME = 'plan3.jpg'
+# FILE_NAME = 'test.jpg'
 # FILE_NAME = 'new.jpg'
 # FILE_NAME = 'level0.jpg'
 # FILE_NAME = 'level1.jpg'
@@ -19,6 +22,7 @@ FILE_NAME = 'plan.jpg'
 # FILE_NAME = 'level4.jpg'
 # FILE_NAME = 'level5.jpg'
 # FILE_NAME = 'floor1.jpg'
+# FILE_NAME = 'white.jpg'
 
 
 filepath = os.path.join(BASE_DIR, 'src', DIR, FILE_NAME)

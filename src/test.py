@@ -1,40 +1,101 @@
 import os,sys
-import numpy as np
-import cv2
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DIR = 'images'
+
+from typing import List, Dict
+import cv2
+import numpy as np
+# import os
+import math
+# import glob
+# import pytesseract
+from PIL import Image
+# import sys
+# import requests
+# import re
+from pythonRLSA import rlsa
 
 FILE_NAME = 'plan.jpg'
-
-
-
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DIR = 'images'
 filepath = os.path.join(BASE_DIR, 'src', DIR, FILE_NAME)
-# author: qzane@live.com
-# reference: http://stackoverflow.com/a/23565051
-# further reading: http://docs.opencv.org/master/da/d56/group__text__detect.html#gsc.tab=0
-def text_detect(img,ele_size=(8,2)): #
-    if len(img.shape)==3:
-        img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    img_sobel = cv2.Sobel(img,cv2.CV_8U,1,0)#same as default,None,3,1,0,cv2.BORDER_DEFAULT)
-    img_threshold = cv2.threshold(img_sobel,0,255,cv2.THRESH_OTSU+cv2.THRESH_BINARY)
-    element = cv2.getStructuringElement(cv2.MORPH_RECT,ele_size)
-    img_threshold = cv2.morphologyEx(img_threshold[1],cv2.MORPH_CLOSE,element)
-    contours = cv2.findContours(img_threshold,0,1)
-    Rect = [cv2.boundingRect(i) for i in contours[1] if i.shape[0]>50]
-    RectP = [(int(i[0]-i[2]*0.08),int(i[1]-i[3]*0.08),int(i[0]+i[2]*1.1),int(i[1]+i[3]*1.1)) for i in Rect]
-    return RectP
 
 
-def main(inputFile):
-    outputFile = inputFile.split('.')[0]+'-rect.'+'.'.join(inputFile.split('.')[1:])
-    print(outputFile)
-    img = cv2.imread(inputFile)
-    rect = text_detect(img)
-    for i in rect:
-        cv2.rectangle(img,i[:2],i[2:],(0,0,255))
-    cv2.imwrite(outputFile, img)
+minLineLength = 1 #100
+maxLineGap = 50
 
-if __name__ == '__main__':
-    main(filepath)
+def lines_extraction(gray: List[int]) -> List[int]:
+    """
+    this function extracts the lines from the binary image. Cleaning process.
+    """
+    edges = cv2.Canny(gray, 75, 150)
+    lines = cv2.HoughLinesP(edges, 1, np.pi/180, 100, minLineLength, maxLineGap)
+    return lines
+
+image = cv2.imread(filepath) #reading the image
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # converting to grayscale image
+(thresh, im_bw) = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU) # converting to binary image
+im_bw = ~im_bw
+
+mask = np.ones(image.shape[:2], dtype="uint8") * 255 # create blank image of same dimension of the original image
+lines = lines_extraction(gray) # line extraction
+
+try:
+    for line in lines:
+        """
+        drawing extracted lines on mask
+        """
+        x1, y1, x2, y2 = line[0]
+        cv2.line(mask, (x1, y1), (x2, y2), (0, 255, 0), 1)
+except TypeError:
+    pass
+contours, hierarchy = cv2.findContours(im_bw, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+areas = [cv2.contourArea(c) for c in contours]
+avgArea = sum(areas)/len(areas)
+for c in contours:
+    if cv2.contourArea(c) > 60*avgArea:
+        cv2.drawContours(mask, [c], -1, 0, 1)
+
+im_bw = cv2.bitwise_and(im_bw, im_bw, mask=mask) # nullifying the mask over binary
+
+mask = np.ones(image.shape[:2], dtype="uint8") * 255 # create the blank image
+contours, hierarchy = cv2.findContours(im_bw, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+heights = [cv2.boundingRect(contour)[3] for contour in contours]
+avgheight = sum(heights)/len(heights)
+
+# finding the larger text
+for c in contours:
+    [x,y,w,h] = cv2.boundingRect(c)
+    if h > 2*avgheight:
+        cv2.drawContours(mask, [c], -1, 0, 1)
+
+cv2.imshow('mask', mask)
+
+x, y = mask.shape # image dimensions
+
+value = max(math.ceil(x/100), math.ceil(y/100))+20
+mask = rlsa.rlsa(mask, True, True, value) #rlsa application
+
+cv2.imshow('mask1', mask)
+
+contours, hierarchy = cv2.findContours(~mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+mask2 = np.ones(image.shape, dtype="uint8") * 255 # blank 3 layer image
+for contour in contours:
+    [x, y, w, h] = cv2.boundingRect(contour)
+    # if w > 0.60*image.shape[1]:# width heuristic applied
+    title = image[y: y+h, x: x+w]
+    mask2[y: y+h, x: x+w] = title # copied title contour onto the blank image
+    image[y: y+h, x: x+w] = 255 # nullified the title contour on original image
+
+# title = pytesseract.image_to_string(Image.fromarray(mask2))
+# content = pytesseract.image_to_string(Image.fromarray(image))
+
+# print('title - {0}, content - {1}'.format(title, content))
+
+cv2.imshow('title', mask2)
+# cv2.imwrite('title.png', mask2)
+cv2.imshow('content', image)
+# cv2.imshow('content.png', image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
