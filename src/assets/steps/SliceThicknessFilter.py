@@ -76,7 +76,7 @@ class SliceThicknessFilter(Base):
         result1 = cv2.normalize(mask, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
         self.mask = mask
         self.result1 = result1
-        self.show('mask', mask, True)
+        self.show('mask', mask)
 
 
 

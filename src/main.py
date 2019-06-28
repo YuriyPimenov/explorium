@@ -10,8 +10,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIR = 'images'
 
 
-# FILE_NAME = 'plan.jpg'
-FILE_NAME = 'plan2.png'
+FILE_NAME = 'plan.jpg'
+# FILE_NAME = 'plan2.png'
 # FILE_NAME = 'plan3.jpg'
 # FILE_NAME = 'test.jpg'
 # FILE_NAME = 'new.jpg'

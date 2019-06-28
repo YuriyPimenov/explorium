@@ -25,7 +25,7 @@ class Explorium:
         '''
         Шаг четвертый: Создать матрицу, которая будет указывать какой поворот у стены содержащая текущий пиксель
         '''
-        self.angleMatrixGen = AngleMatrixGeneration(debug=True)
+        self.angleMatrixGen = AngleMatrixGeneration(self.sliceThickFilter.mask, self.sliceTrans.Ms, self.preproc.row, self.preproc.col, debug=True)
 
         cv2.waitKey(0)
         cv2.destroyAllWindows()
