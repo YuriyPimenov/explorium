@@ -100,3 +100,6 @@ class Base:
                     mask = cv2.add(mask, masksLabel[i])
                     self.show(str(i), masksLabel[i])
         return mask, dataNames, dataValues
+
+    def print(self, n, v):
+        print(n+' = {}'.format(v))

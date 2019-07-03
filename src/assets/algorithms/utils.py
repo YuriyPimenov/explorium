@@ -1,6 +1,7 @@
 import random
 import math
-
+from cmath import rect, phase
+from math import radians, degrees
 
 def distance(a,b):
     return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
@@ -61,3 +62,6 @@ def compass_to_rgb(h, s=1, v=1):
     elif hi == 5: r, g, b = v, p, q
     r, g, b = int(r * 255), int(g * 255), int(b * 255)
     return r, g, b
+
+def mean_angle(angles):
+    return degrees(phase(sum(rect(1, radians(d)) for d in angles) / len(angles)))

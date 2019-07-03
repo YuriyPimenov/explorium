@@ -1,11 +1,10 @@
 import numpy as np
 import cv2
 import math
-from cmath import rect, phase
-from math import radians, degrees
+
 import matplotlib as plt
 from skimage import measure
-from ..algorithms.utils import Average, compass_to_rgb
+from ..algorithms.utils import Average, compass_to_rgb, mean_angle
 from .Base import Base
 class AngleMatrixGeneration(Base):
     def __init__(self, mask, Ms, row , col, debug=True):
@@ -39,7 +38,7 @@ class AngleMatrixGeneration(Base):
             for colEl in range(col):
                 element = Ms[rowEl][colEl]
                 ph, pv, pd, pe = element
-                if ph != 0 and pv != 0 and pd != 0 and pe != 0:
+                if ph != 0 and pv != 0 and pd != 0 and pe != 0 and mask[rowEl][colEl]!=0:
                     if pd==pe and pd==ph or pd==pe and pv>ph:
                         Ma[rowEl][colEl] = 90
                     elif pd==pe and pd==pv or pd==pe and ph>pv:
@@ -160,7 +159,6 @@ class AngleMatrixGeneration(Base):
         return avg
 
     def avgAngles(self, angles):
-        return round(self.mean_angle(angles), 12)
+        return round(mean_angle(angles), 12)
 
-    def mean_angle(self, angles):
-        return degrees(phase(sum(rect(1, radians(d)) for d in angles) / len(angles)))
+
